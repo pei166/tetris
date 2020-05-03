@@ -244,8 +244,3 @@ drawMino(mino);
 setInterval(dropMino, DROP_SPEED);
 
 
-
-
-
-
-
