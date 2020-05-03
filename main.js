@@ -9,6 +9,12 @@ const ORIGIN = 80;
 const DROP_SPEED = 300;
 var context = document.querySelector("canvas").getContext("2d");
 
+let minoX = 0;
+let minoY = 0;
+let mino;
+let gameOver = false;
+let lineCount = 0;
+
 var field = [ 
   [-1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1], 
   [-1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1], 
@@ -91,11 +97,13 @@ function drawField() {
       context.strokeRect(ORIGIN + x * BLOCK_SIZE, ORIGIN + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
     }
   }
+  if (gameOver) {
+    context.font = "60px serif";
+    context.fillStyle = "#FFFF00";
+    context.fillText("GAME OVER", 60, 400);
+  }
 }
 
-let minoX = 0;
-let minoY = 0;
-let mino;
 function drawMino(mino) {
   for (let y = 0; y < MINO_SIZE; y ++ ) {
     for (let x = 0; x < MINO_SIZE; x ++) {
@@ -109,6 +117,17 @@ function drawMino(mino) {
       }  
     }
   }
+}
+
+function drawScore() {
+  context.fillStyle = "#F5F5F5";
+  context.font = "24px serif";
+  context.fillText("SCORE: " + lineCount, 500, 600);
+  context.fillText("Left: A", 500, 200);
+  context.fillText("Right: D", 500, 250);
+  context.fillText("Down: S", 500, 300);
+  context.fillText("Rotate Right: K", 500, 350);
+  context.fillText("Rotate Left: J", 500, 400);
 }
 
 function canMove(mx, my, mino) {
@@ -193,6 +212,7 @@ function deleteLine() {
     let deleteCount = 0;
     if (check) {
       deleteCount ++;
+      lineCount += deleteCount;
       for (let ny = y; ny > 0; ny --) {
         for (let x = 1; x < FIELD_WIDTH - 1; x ++) {
           field[ny][x] = field[ny - deleteCount][x];
@@ -201,19 +221,26 @@ function deleteLine() {
     }
   }
 }
+
 function dropMino() {
+  if (gameOver) return ;
   if (canMove(0, 1, mino)) {
     minoY++;
   } else {
     fixMino();
     deleteLine();
     makeMino();
+    if (!canMove(0, 0, mino)) {
+     gameOver = true; 
+    }
   }
   drawField();
   drawMino(mino);
+  drawScore();
 }
 
 document.onkeydown = function(e) {
+  if (gameOver) return ;
   switch(e.keyCode) {
     case 87:
       if (canMove(0, -1, mino)) minoY --;
@@ -236,11 +263,13 @@ document.onkeydown = function(e) {
   }
   drawField();
   drawMino(mino);
+  drawScore();
 }
 
 makeMino();
 drawField();
 drawMino(mino);
+drawScore();
 setInterval(dropMino, DROP_SPEED);
 
 
