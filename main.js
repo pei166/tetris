@@ -137,9 +137,9 @@ function drawScore() {
   context.fillStyle = "#000000";
   context.font = "24px serif";
   context.fillText("SCORE: " + lineCount, 500, 600);
-  context.fillText("Left: A", 500, 200);
-  context.fillText("Right: D", 500, 250);
-  context.fillText("Down: S", 500, 300);
+  context.fillText("Move Left: A", 500, 200);
+  context.fillText("Move Right: D", 500, 250);
+  context.fillText("Move Down: S", 500, 300);
   context.fillText("Rotate Right: K", 500, 350);
   context.fillText("Rotate Left: J", 500, 400);
 }
@@ -216,20 +216,18 @@ function makeMino() {
 }
 
 function deleteLine() {
-  for (let y = 1; y < FIELD_HEIGHT; y ++) {
+  for (let y = 1; y < FIELD_HEIGHT - 1; y ++) {
     let check = true;
     for (let x = 1; x < FIELD_WIDTH - 1; x ++) {
-      if (field[y][x] === 0 || field[y][x] === -1) {
+      if (field[y][x] === 0) {
         check = false;
       }
     }
-    let deleteCount = 0;
     if (check) {
-      deleteCount ++;
-      lineCount += deleteCount;
+      lineCount += 1;
       for (let ny = y; ny > 0; ny --) {
         for (let x = 1; x < FIELD_WIDTH - 1; x ++) {
-          field[ny][x] = field[ny - deleteCount][x];
+          field[ny][x] = field[ny - 1][x];
         }
       }
     }
@@ -256,9 +254,6 @@ function dropMino() {
 document.onkeydown = function(e) {
   if (gameOver) return ;
   switch(e.keyCode) {
-    case 87:
-      if (canMove(0, -1, mino)) minoY --;
-      break;
     case 65:
       if (canMove(-1, 0, mino)) minoX --;
       break;
