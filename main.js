@@ -101,8 +101,11 @@ function drawField() {
   for (let y = 1; y < FIELD_HEIGHT; y ++) {
     for (let x = 0; x < FIELD_WIDTH; x ++) {
       context.fillStyle = "#F5F5DC";
-      context.strokeStyle = "#F5F5F5";
-      if (field[y][x] === -1) context.fillStyle = "#797979";
+      context.strokeStyle = "#D3D3D3";
+      if (field[y][x] === -1) {
+        context.fillStyle = "#797979"
+        context.strokeStyle = "#F5F5F5"
+      }
       if (field[y][x]) context.fillStyle = minoColors[field[y][x] - 1];
       context.fillRect(ORIGIN + x * BLOCK_SIZE, ORIGIN + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
       context.strokeRect(ORIGIN + x * BLOCK_SIZE, ORIGIN + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
@@ -119,7 +122,7 @@ function drawMino(mino) {
   for (let y = 0; y < MINO_SIZE; y ++ ) {
     for (let x = 0; x < MINO_SIZE; x ++) {
       context.fillStyle = minoColors[minoType];
-      context.strokeStyle = "#F5F5F5";
+      context.strokeStyle = "#D3D3D3";
       if (mino[y][x]) {
         let px = ORIGIN + (4 * BLOCK_SIZE) + (x + minoX) * BLOCK_SIZE;
         let py = ORIGIN + (y + minoY) * BLOCK_SIZE;
