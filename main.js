@@ -1,20 +1,25 @@
-const CANVAS_SIZE = 800;
-
+const CANVAS_SIZE_X = 1600;
+const CANVAS_SIZE_Y = 800;
 const FIELD_WIDTH = 12;
 const FIELD_HEIGHT = 22;
-
 const MINO_SIZE = 4;
 const BLOCK_SIZE = 30;
-const ORIGIN = 80;
+const ORIGIN_X = 650;
+const ORIGIN_Y = 80;
 const DROP_SPEED = 300;
+
 var context = document.querySelector("canvas").getContext("2d");
 
 let minoX = 0;
 let minoY = 0;
 let mino;
+let hold;
+let holdColor = null;
+let minoColor = null;
 let gameOver = false;
-let lineCount = 0;
+let lineCount = 0
 let minoType;
+let holded = false;
 
 let field = [ 
   [-1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1], 
@@ -86,6 +91,18 @@ let minos = [
   ],
 ];
 
+let holdSpace;
+function initHold() {
+  holdSpace = [
+    [-1, -1, -1, -1, -1, -1],
+    [-1,  0,  0,  0,  0, -1],
+    [-1,  0,  0,  0,  0, -1],
+    [-1,  0,  0,  0,  0, -1],
+    [-1,  0,  0,  0,  0, -1],
+    [-1, -1, -1, -1, -1, -1],
+  ];
+};
+
 let minoColors = [
   "#EE82EE",
   "#87CEFA",
@@ -97,7 +114,7 @@ let minoColors = [
 ];
 
 function drawField() {
-  context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+  context.clearRect(0, 0, CANVAS_SIZE_X, CANVAS_SIZE_Y);
   for (let y = 1; y < FIELD_HEIGHT; y ++) {
     for (let x = 0; x < FIELD_WIDTH; x ++) {
       context.fillStyle = "#F5F5DC";
@@ -107,14 +124,14 @@ function drawField() {
         context.strokeStyle = "#F5F5F5"
       }
       if (field[y][x]) context.fillStyle = minoColors[field[y][x] - 1];
-      context.fillRect(ORIGIN + x * BLOCK_SIZE, ORIGIN + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-      context.strokeRect(ORIGIN + x * BLOCK_SIZE, ORIGIN + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+      context.fillRect(ORIGIN_X + x * BLOCK_SIZE, ORIGIN_Y + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+      context.strokeRect(ORIGIN_X + x * BLOCK_SIZE, ORIGIN_Y + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
     }
   }
   if (gameOver) {
     context.font = "60px serif";
     context.fillStyle = "#191970";
-    context.fillText("GAME OVER", 60, 400);
+    context.fillText("GAME OVER", ORIGIN_X - 20, 400);
   }
 }
 
@@ -124,8 +141,8 @@ function drawMino(mino) {
       context.fillStyle = minoColors[minoType];
       context.strokeStyle = "#D3D3D3";
       if (mino[y][x]) {
-        let px = ORIGIN + (4 * BLOCK_SIZE) + (x + minoX) * BLOCK_SIZE;
-        let py = ORIGIN + (y + minoY) * BLOCK_SIZE;
+        let px = ORIGIN_X + (4 * BLOCK_SIZE) + (x + minoX) * BLOCK_SIZE;
+        let py = ORIGIN_Y + (y + minoY) * BLOCK_SIZE;
         context.fillRect(px, py, BLOCK_SIZE, BLOCK_SIZE); 
         context.strokeRect(px, py, BLOCK_SIZE, BLOCK_SIZE);
       }  
@@ -133,15 +150,33 @@ function drawMino(mino) {
   }
 }
 
+function drawHold() {
+  for (let y = 0; y < 6; y ++) {
+    for (let x = 0; x < 6; x ++) {
+      context.fillStyle = "#F5F5DC";
+      context.strokeStyle = "#F5F5DC";
+      if (holdSpace[y][x] === -1) {
+        context.fillStyle = "#797979"
+        context.strokeStyle = "#F5F5F5"
+      } else if (holdSpace[y][x]) {
+        context.fillStyle = minoColors[holdColor];
+      }
+      context.fillRect(ORIGIN_X + (x - 7) * BLOCK_SIZE, ORIGIN_Y + (y + 1) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+      context.strokeRect(ORIGIN_X + (x - 7) * BLOCK_SIZE, ORIGIN_Y + (y + 1) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+    }
+  }
+}
+
 function drawScore() {
   context.fillStyle = "#000000";
   context.font = "24px serif";
-  context.fillText("SCORE: " + lineCount, 500, 600);
-  context.fillText("Move Left: A", 500, 200);
-  context.fillText("Move Right: D", 500, 250);
-  context.fillText("Move Down: S", 500, 300);
-  context.fillText("Rotate Right: K", 500, 350);
-  context.fillText("Rotate Left: J", 500, 400);
+  context.fillText("SCORE: " + lineCount, ORIGIN_X + 400, ORIGIN_Y + 500);
+  context.fillText("Move Left: A", ORIGIN_X + 400, ORIGIN_Y + 100);
+  context.fillText("Move Right: D", ORIGIN_X + 400, ORIGIN_Y + 150);
+  context.fillText("Move Down: S", ORIGIN_X + 400, ORIGIN_Y + 200);
+  context.fillText("Rotate Right: K", ORIGIN_X + 400, ORIGIN_Y + 250);
+  context.fillText("Rotate Left: J", ORIGIN_X + 400, ORIGIN_Y + 300);
+  context.fillText("Hold: Space", ORIGIN_X + 400, ORIGIN_Y + 350);
 }
 
 function canMove(mx, my, mino) {
@@ -234,12 +269,46 @@ function deleteLine() {
   }
 }
 
+function holdMino() {
+  if (holded) return ;
+  let tmp = hold;
+  hold = minos[minoType];
+  if (holdColor === null) {
+    holdColor = minoType;
+    makeMino();
+    for (let y = 0; y < MINO_SIZE; y ++) {
+      for (let x = 0; x < MINO_SIZE; x ++) {
+        if (hold[y][x]) {
+          holdSpace[y + 1][x + 1] = hold[y][x];
+        }
+      }
+    }
+    holded = true;
+    return ;
+  }
+  mino = tmp;
+  tmp = holdColor;
+  holdColor = minoType;
+  for (let y = 0; y < MINO_SIZE; y ++) {
+    for (let x = 0; x < MINO_SIZE; x ++) {
+      if (hold[y][x]) {
+        holdSpace[y + 1][x + 1] = hold[y][x];
+      }
+    }
+  }
+  minoType = tmp;
+  minoX = 0;
+  minoY = 0;
+  holded = true;
+}
+
 function dropMino() {
   if (gameOver) return ;
   if (canMove(0, 1, mino)) {
     minoY++;
   } else {
     fixMino();
+    holded = false;
     deleteLine();
     makeMino();
     if (!canMove(0, 0, mino)) {
@@ -249,11 +318,18 @@ function dropMino() {
   drawField();
   drawMino(mino);
   drawScore();
+  drawHold();
 }
 
 document.onkeydown = function(e) {
   if (gameOver) return ;
   switch(e.keyCode) {
+    case 32:
+      if (!holded) {
+        initHold();
+        holdMino();
+      }  
+      break;
     case 65:
       if (canMove(-1, 0, mino)) minoX --;
       break;
@@ -273,12 +349,15 @@ document.onkeydown = function(e) {
   drawField();
   drawMino(mino);
   drawScore();
+  drawHold();
 }
 
+initHold();
 makeMino();
 drawField();
 drawMino(mino);
 drawScore();
+drawHold();
 setInterval(dropMino, DROP_SPEED);
 
 
