@@ -20,6 +20,18 @@ let gameOver = false;
 let lineCount = 0
 let minoType;
 let holded = false;
+let used = [false, false, false, false, false, false, false];
+
+function initUsed() { 
+  used = [false, false, false, false, false, false, false];
+}
+
+function isAllUsed() {
+  for (let i = 0; i < 7; i++) {
+    if (!used[i]) return false;
+  }
+  return true;
+}
 
 let field = [ 
   [-1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, -1], 
@@ -244,7 +256,14 @@ function fixMino() {
 }
 
 function makeMino() {
-  minoType = Math.floor(Math.random() * 7);
+  if (isAllUsed()) initUsed();
+  while (true) {
+    minoType = Math.floor(Math.random() * 7);
+    if (!used[minoType]) {
+      used[minoType] = true;
+      break;
+    }
+  }
   mino = minos[minoType];
   minoX = 0;
   minoY = 0;
